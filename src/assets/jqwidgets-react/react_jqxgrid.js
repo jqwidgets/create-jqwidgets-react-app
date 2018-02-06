@@ -1,8 +1,9 @@
 /*
-jQWidgets v4.5.3 (2017-June)
+jQWidgets v5.4.0 (2017-Oct)
 Copyright (c) 2011-2017 jQWidgets.
-License: http://jqwidgets.com/license/
+License: https://jqwidgets.com/license/
 */
+
 import React from 'react';
 
 const JQXLite = window.JQXLite;
@@ -903,8 +904,8 @@ export default class JqxGrid extends React.Component {
     iscolumnpinned(dataField) {
         return JQXLite(this.componentSelector).jqxGrid('iscolumnpinned', dataField);  
     };
-    localizestrings(localizationObject) {
-        JQXLite(this.componentSelector).jqxGrid('localizestrings', localizationObject);  
+    localizestrings(localizationobject) {
+        JQXLite(this.componentSelector).jqxGrid('localizestrings', localizationobject);  
     };
     pincolumn(dataField) {
         JQXLite(this.componentSelector).jqxGrid('pincolumn', dataField);  
@@ -1014,8 +1015,8 @@ export default class JqxGrid extends React.Component {
     refreshfilterrow() {
         JQXLite(this.componentSelector).jqxGrid('refreshfilterrow');  
     };
-    gotopage(pageNumber) {
-        JQXLite(this.componentSelector).jqxGrid('gotopage', pageNumber);  
+    gotopage(pagenumber) {
+        JQXLite(this.componentSelector).jqxGrid('gotopage', pagenumber);  
     };
     gotoprevpage() {
         JQXLite(this.componentSelector).jqxGrid('gotoprevpage');  
@@ -1125,8 +1126,8 @@ export default class JqxGrid extends React.Component {
     getstate() {
         return JQXLite(this.componentSelector).jqxGrid('getstate');  
     };
-    loadstate(stateObject) {
-        JQXLite(this.componentSelector).jqxGrid('loadstate', stateObject);  
+    loadstate(stateobject) {
+        JQXLite(this.componentSelector).jqxGrid('loadstate', stateobject);  
     };
     savestate() {
         return JQXLite(this.componentSelector).jqxGrid('savestate');  
