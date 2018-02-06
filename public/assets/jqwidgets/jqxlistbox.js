@@ -220,7 +220,7 @@
             }
             else {
                 if (self.host.find('li').length > 0 || self.host.find('option').length > 0) {
-                    var result = $.jqx.parseSourceTag(that.element);
+                    var result = $.jqx.parseSourceTag(self.element);
                    self.source = result.items;
                 }
             }
@@ -641,6 +641,7 @@
                 return;
             }
         
+            this.itemHeight = parseInt(this.itemHeight);
             this._cachedItemHtml = [];
             this.visibleItems = new Array();
             var selectInitialItem = function (initialRefresh) {
@@ -1587,6 +1588,9 @@
 
         clear: function () {
             this.source = null;
+            this.visibleItems = new Array();
+            this.renderedVisibleItems = new Array();
+            this.itemsByValue = new Array();
             this.clearSelection();
             this.refresh();
         },
@@ -3126,189 +3130,188 @@
             });
             var hasTransform = $.jqx.utilities.hasTransform(this.host);
 
-            if (this.enableSelection) {
-                var isTouch = self.isTouchDevice() && this.touchMode !== true;
-                var eventName = !isTouch ? 'mousedown' : 'touchend';
-                var upEventName = !isTouch ? 'mouseup' : 'touchend';
+            var isTouch = self.isTouchDevice() && this.touchMode !== true;
+            var eventName = !isTouch ? 'mousedown' : 'touchend';
+            var upEventName = !isTouch ? 'mouseup' : 'touchend';
 
-                if (this.overlayContent) {
-                    this.addHandler(this.overlayContent, $.jqx.mobile.getTouchEventName('touchend'), function (event) {
-                        if (!self.enableSelection) {
+            if (this.overlayContent) {
+                this.addHandler(this.overlayContent, $.jqx.mobile.getTouchEventName('touchend'), function (event) {
+                    if (!self.enableSelection) {
+                        return true;
+                    }
+
+                    if (isTouch) {
+                        self._newScroll = new Date();
+                        if (self._newScroll - self._lastScroll < 500) {
                             return true;
                         }
+                    }
 
-                        if (isTouch) {
-                            self._newScroll = new Date();
-                            if (self._newScroll - self._lastScroll < 500) {
-                                return true;
+                    var touches = $.jqx.mobile.getTouches(event);
+                    var touch = touches[0];
+                    if (touch != undefined) {
+                        var selfOffset = self.host.offset();
+                        var left = parseInt(touch.pageX);
+                        var top = parseInt(touch.pageY);
+                        if (self.touchMode == true) {
+                            if (touch._pageX != undefined) {
+                                left = parseInt(touch._pageX);
+                                top = parseInt(touch._pageY);
                             }
                         }
+                        left = left - selfOffset.left;
+                        top = top - selfOffset.top;
+                        var item = self._hitTest(left, top);
+                        if (item != null && !item.isGroup) {
+                            self._newScroll = new Date();
+                            if (self._newScroll - self._lastScroll < 500) {
+                                return false;
+                            }
+                            if (self.checkboxes) {
+                                self._updateItemCheck(item, item.visibleIndex);
+                                return;
+                            }
 
-                        var touches = $.jqx.mobile.getTouches(event);
-                        var touch = touches[0];
-                        if (touch != undefined) {
-                            var selfOffset = self.host.offset();
-                            var left = parseInt(touch.pageX);
-                            var top = parseInt(touch.pageY);
-                            if (self.touchMode == true) {
-                                if (touch._pageX != undefined) {
-                                    left = parseInt(touch._pageX);
-                                    top = parseInt(touch._pageY);
+
+                            if (item.html.indexOf('href') != -1) {
+                                setTimeout(function () {
+                                    self.selectIndex(item.visibleIndex, false, true, false, 'mouse', event);
+                                    self.content.trigger('click');
+                                    return false;
+                                }, 100);
+                            }
+                            else {
+                                self.selectIndex(item.visibleIndex, false, true, false, 'mouse', event);
+                                if (event.preventDefault) event.preventDefault();
+
+                                self.content.trigger('click');
+                                return false;
+                            }
+                        }
+                    }
+                });
+            }
+            else {
+                var isMouseDown = false;
+
+                this.addHandler(this.content, eventName, function (event) {
+                    if (!self.enableSelection) {
+                        return true;
+                    }
+
+                    isMouseDown = true;
+
+                    if (isTouch) {
+                        self._newScroll = new Date();
+                        if (self._newScroll - self._lastScroll < 500) {
+                            return false;
+                        }
+                    }
+
+                    self.focused = true;
+                    if (!self.isTouchDevice() && self.focusable) {
+                        self.host.focus();
+                    }
+                    if (event.target.id != ('listBoxContent' + self.element.id) && self.itemswrapper[0] != event.target) {
+                        var target = event.target;
+                        var targetOffset = $(target).offset();
+                        var selfOffset = self.host.offset();
+                        if (hasTransform) {
+                            var left = $.jqx.mobile.getLeftPos(target);
+                            var top = $.jqx.mobile.getTopPos(target);
+                            targetOffset.left = left; targetOffset.top = top;
+
+                            left = $.jqx.mobile.getLeftPos(self.element);
+                            top = $.jqx.mobile.getTopPos(self.element);
+                            selfOffset.left = left; selfOffset.top = top;
+                        }
+
+                        var y = parseInt(targetOffset.top) - parseInt(selfOffset.top);
+                        var x = parseInt(targetOffset.left) - parseInt(selfOffset.left);
+                        var item = self._hitTest(x, y);
+                        if (item != null && !item.isGroup) {
+                            var doSelection = function (item, event) {
+                                if (!self._shiftKey)
+                                    self._clickedIndex = item.visibleIndex;
+                                if (!self.checkboxes) {
+                                    self.selectIndex(item.visibleIndex, false, true, false, 'mouse', event);
+                                } else {
+                                    x = 20 + event.pageX - targetOffset.left;
+                                    if (self.rtl) {
+                                        var hscroll = self.hScrollBar.css('visibility') != 'hidden' ? self.hScrollInstance.max : self.host.width();
+                                        if (x <= self.host.width() - 20) {
+                                            if (!self.allowDrag) {
+                                                self._updateItemCheck(item, item.visibleIndex);
+                                                self.selectIndex(item.visibleIndex, false, true, false, 'mouse', event);
+                                            }
+                                            else {
+                                                setTimeout(function () {
+                                                    if (!self._dragItem) {
+                                                        if (!isMouseDown) {
+                                                            self._updateItemCheck(item, item.visibleIndex);
+                                                            self.selectIndex(item.visibleIndex, false, true, false, 'mouse', event);
+                                                        }
+                                                    }
+                                                }, 200);
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        if (x + self.hScrollInstance.value >= 20) {
+                                            if (!self.allowDrag) {
+                                                self._updateItemCheck(item, item.visibleIndex);
+                                                self.selectIndex(item.visibleIndex, false, true, false, 'mouse', event);
+                                            }
+                                            else {
+                                                setTimeout(function () {
+                                                    if (!self._dragItem) {
+                                                        if (!isMouseDown) {
+                                                            self._updateItemCheck(item, item.visibleIndex);
+                                                            self.selectIndex(item.visibleIndex, false, true, false, 'mouse', event);
+                                                        }
+                                                    }
+                                                }, 200);
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                            left = left - selfOffset.left;
-                            top = top - selfOffset.top;
-                            var item = self._hitTest(left, top);
-                            if (item != null && !item.isGroup) {
-                                self._newScroll = new Date();
-                                if (self._newScroll - self._lastScroll < 500) {
-                                    return false;
-                                }
-                                if (self.checkboxes) {
-                                    self._updateItemCheck(item, item.visibleIndex);
-                                    return;
-                                }
 
-
+                            if (!item.disabled) {
                                 if (item.html.indexOf('href') != -1) {
                                     setTimeout(function () {
-                                        self.selectIndex(item.visibleIndex, false, true, false, 'mouse', event);
-                                        self.content.trigger('click');
-                                        return false;
+                                        doSelection(item, event);
                                     }, 100);
                                 }
                                 else {
-                                    self.selectIndex(item.visibleIndex, false, true, false, 'mouse', event);
-                                    if (event.preventDefault) event.preventDefault();
-
-                                    self.content.trigger('click');
-                                    return false;
+                                    doSelection(item, event);
                                 }
                             }
                         }
-                    });
-                }
-                else {
-                    var isMouseDown = false;
-
-                    this.addHandler(this.content, eventName, function (event) {
-                        if (!self.enableSelection) {
-                            return true;
+                        if (eventName == 'mousedown') {
+                            var rightclick = false;
+                            if (event.which) rightclick = (event.which == 3);
+                            else if (event.button) rightclick = (event.button == 2);
+                            if (rightclick) return true;
+                            return false;
                         }
+                    }
 
-                        isMouseDown = true;
-
-                        if (isTouch) {
-                            self._newScroll = new Date();
-                            if (self._newScroll - self._lastScroll < 500) {
-                                return false;
-                            }
-                        }
-
-                        self.focused = true;
-                        if (!self.isTouchDevice() && self.focusable) {
-                            self.host.focus();
-                        }
-                        if (event.target.id != ('listBoxContent' + self.element.id) && self.itemswrapper[0] != event.target) {
-                            var target = event.target;
-                            var targetOffset = $(target).offset();
-                            var selfOffset = self.host.offset();
-                            if (hasTransform) {
-                                var left = $.jqx.mobile.getLeftPos(target);
-                                var top = $.jqx.mobile.getTopPos(target);
-                                targetOffset.left = left; targetOffset.top = top;
-
-                                left = $.jqx.mobile.getLeftPos(self.element);
-                                top = $.jqx.mobile.getTopPos(self.element);
-                                selfOffset.left = left; selfOffset.top = top;
-                            }
-
-                            var y = parseInt(targetOffset.top) - parseInt(selfOffset.top);
-                            var x = parseInt(targetOffset.left) - parseInt(selfOffset.left);
-                            var item = self._hitTest(x, y);
-                            if (item != null && !item.isGroup) {
-                                var doSelection = function (item, event) {
-                                    if (!self._shiftKey)
-                                        self._clickedIndex = item.visibleIndex;
-                                    if (!self.checkboxes) {
-                                        self.selectIndex(item.visibleIndex, false, true, false, 'mouse', event);
-                                    } else {
-                                       x = 20 + event.pageX - targetOffset.left;
-                                        if (self.rtl) {
-                                            var hscroll = self.hScrollBar.css('visibility') != 'hidden' ? self.hScrollInstance.max : self.host.width();
-                                            if (x <= self.host.width() - 20) {
-                                                if (!self.allowDrag) {
-                                                    self._updateItemCheck(item, item.visibleIndex);
-                                                    self.selectIndex(item.visibleIndex, false, true, false, 'mouse', event);
-                                                }
-                                                else {
-                                                    setTimeout(function () {
-                                                        if (!self._dragItem) {
-                                                            if (!isMouseDown) {
-                                                                self._updateItemCheck(item, item.visibleIndex);
-                                                                self.selectIndex(item.visibleIndex, false, true, false, 'mouse', event);
-                                                            }
-                                                        }
-                                                    }, 200);
-                                                }
-                                            }
-                                        }
-                                        else {
-                                            if (x + self.hScrollInstance.value >= 20) {
-                                                if (!self.allowDrag) {
-                                                    self._updateItemCheck(item, item.visibleIndex);
-                                                    self.selectIndex(item.visibleIndex, false, true, false, 'mouse', event);
-                                                }
-                                                else {
-                                                    setTimeout(function () {
-                                                        if (!self._dragItem) {
-                                                            if (!isMouseDown) {
-                                                                self._updateItemCheck(item, item.visibleIndex);
-                                                                self.selectIndex(item.visibleIndex, false, true, false, 'mouse', event);
-                                                            }
-                                                        }
-                                                    }, 200);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                if (!item.disabled) {
-                                    if (item.html.indexOf('href') != -1) {
-                                        setTimeout(function () {
-                                            doSelection(item, event);
-                                        }, 100);
-                                    }
-                                    else {
-                                        doSelection(item, event);
-                                    }
-                                }
-                            }
-                            if (eventName == 'mousedown') {
-                                var rightclick = false;
-                                if (event.which) rightclick = (event.which == 3);
-                                else if (event.button) rightclick = (event.button == 2);
-                                if (rightclick) return true;
-                                return false;
-                            }
-                        }
-
-                        return true;
-                    });
-                }
-
-                this.addHandler(this.content, 'mouseup', function (event) {
-                    self.vScrollInstance.handlemouseup(self, event);
-                    isMouseDown = false;
+                    return true;
                 });
-
-                if ($.jqx.browser.msie) {
-                    this.addHandler(this.content, 'selectstart', function (event) {
-                        return false;
-                    });
-                }
             }
+
+            this.addHandler(this.content, 'mouseup', function (event) {
+                self.vScrollInstance.handlemouseup(self, event);
+                isMouseDown = false;
+            });
+
+            if ($.jqx.browser.msie) {
+                this.addHandler(this.content, 'selectstart', function (event) {
+                    return false;
+                });
+            }
+            
             // hover behavior.
             var isTouchDevice = this.isTouchDevice();
             if (this.enableHover && !isTouchDevice) {
@@ -4067,6 +4070,11 @@
                     if (title && title != '') {
                         //           listBoxItem.label = listBoxItem.value = title;
                     }
+                }
+
+                if (typeof listBoxItem.label === "string") {
+          //          listBoxItem.label = listBoxItem.label.replace(/</g, '&lt;');
+            //        listBoxItem.label = listBoxItem.label.replace(/>/g, '&gt;');
                 }
 
                 listBoxItem.group = group;

@@ -86,7 +86,7 @@
                 rtl:false,
                 selectionRenderer:null,
                 listBox:null,
-                popupZIndex:9999999999999,
+                popupZIndex: 2000,
                 renderMode:"default",
                 touchMode:"auto",
                 _checkForHiddenParent:true,
@@ -194,7 +194,7 @@
             else {
                 if (self.host.find('li').length > 0 || self.host.find('option').length > 0)
                 {
-                    var result = $.jqx.parseSourceTag(that.element);
+                    var result = $.jqx.parseSourceTag(self.element);
                     self.source = result.items;
                 }
             }
@@ -536,18 +536,17 @@
 
         _setSize: function () {
             if (this.width != null && this.width.toString().indexOf("px") != -1) {
-                this.host.width(this.width);
+                this.element.style.width = this.width;
             }
-            else
-                if (this.width != undefined && !isNaN(this.width)) {
-                    this.host.width(this.width);
-                };
+            else if (this.width != undefined && !isNaN(this.width)) {
+                this.element.style.width = this.width + 'px';
+            }
 
             if (this.height != null && this.height.toString().indexOf("px") != -1) {
-                this.host.height(this.height);
+                this.element.style.height = this.height;
             }
             else if (this.height != undefined && !isNaN(this.height)) {
-                this.host.height(this.height);
+                this.element.style.height = this.height + 'px';
             };
 
             var isPercentage = false;

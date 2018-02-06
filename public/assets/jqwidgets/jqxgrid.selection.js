@@ -1546,7 +1546,9 @@
                 case 'multiplecellsextended':
                 case 'multiplecellsadvanced':
                     var selectedcell = self.getselectedcell();
-
+                    if (selectedcell === null) {
+                        self.selectcell(0, self.columns.records[0].displayfield);
+                    }
                     if (selectedcell != null) {
                         var visibleindex = this.getrowvisibleindex(selectedcell.rowindex);
                         var rowindex = visibleindex;
@@ -1613,6 +1615,27 @@
                                         }
                                     }
                                 }
+                                else if (self.pageable) {
+                                    var foundIndex = false;
+                                    if (datarow) {
+                                        for (var i = 0; i < self.dataview.rows.length; i++) {
+                                            if (self.dataview.rows[i].boundindex == datarow.boundindex) {
+                                                foundIndex = true;
+                                            }
+                                        }
+
+                                        if (!foundIndex) {
+                                            if (self.pagerpageinput && event.keyCode === 9) {
+                                                if (datarow.boundindex > self.dataview.rows[self.dataview.rows.length - 1].boundindex) {
+                                                    self.pagerpageinput.focus();
+                                                    event.preventDefault();
+                                                }
+                                            }
+                                            datarow = null;
+                                            return true;
+                                        }
+                                    }
+                               }
 
                                 if (datarow != undefined && datafield != null) {
                                     if (clearselection || clearselection == undefined) {
@@ -1756,7 +1779,7 @@
                                 }
                                 else
                                 {
-                                    selectionchanged = true;
+                                    selectionchanged = false;
                                 }
                             }
                         }

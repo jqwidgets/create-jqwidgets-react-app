@@ -30,6 +30,7 @@
                     this.pagershowrowscombo.remove();
                     this.pagershowrowscombo = null;
                 }
+
                 this.pagergotoinput.attr('disabled', this.disabled);
                 this.pagerfirstbutton = $('<div type="button" style="padding: 0px; margin-top: 0px; margin-left: 3px; margin-right: 3px; width: 27px; float: right;"></div>');
                 this.pagerlastbutton = $('<div type="button" style="padding: 0px; margin-top: 0px; margin-right: 3px; width: 27px; float: right;"></div>');
@@ -175,6 +176,12 @@
                     this.pagerpageinput.css('direction', 'rtl');
                 }
 
+                var tabindex = 6 + (this.columns.records ? this.columns.records.length : this.columns.length);
+                this.pagerpageinput.attr('tabindex', tabindex++);
+                this.pagershowrowscombo.attr('tabindex', tabindex++);
+                this.pagerleftbutton.attr('tabindex', tabindex++);
+                this.pagerrightbutton.attr('tabindex', tabindex++);
+
                 var me = this.that;
                 this.removeHandler(this.pagershowrowscombo, 'select');
                 this.addHandler(this.pagershowrowscombo, 'select', function (event) {
@@ -214,6 +221,9 @@
                                 me._updatesize(true);
                             }, 500);
                         }
+                        setTimeout(function () {
+                            me.pagershowrowscombo.focus();
+                        }, 25);
                     }
                 });
 
@@ -232,6 +242,9 @@
                         val = parseInt(val);
                         if (!isNaN(val)) {
                             me.gotopage(val - 1);
+                            setTimeout(function () {
+                                input.focus();
+                            }, 25);
                         }
                         return false;
                     }
@@ -241,6 +254,9 @@
                     val = parseInt(val);
                     if (!isNaN(val)) {
                         me.gotopage(val - 1);
+                        setTimeout(function () {
+                            input.focus();
+                        }, 25);
                     }
                 });
 
@@ -299,6 +315,40 @@
                         else {
                             me.gotonextpage();
                         }
+                    }
+                });
+                this.addHandler(this.pagerrightbutton, 'keydown', function (event) {
+                    if (event.keyCode !== 13) {
+                        return;
+                    }
+
+                    if (!me.pagerrightbutton.jqxButton('disabled')) {
+                        if (!me.rtl) {
+                            me.gotonextpage();
+                        }
+                        else {
+                            me.gotoprevpage();
+                        }
+                        setTimeout(function () {
+                            me.pagerrightbutton.focus();
+                        },25);
+                    }
+                });
+                this.addHandler(this.pagerleftbutton, 'keydown', function (event) {
+                    if (event.keyCode !== 13) {
+                        return;
+                    }
+
+                    if (!me.pagerleftbutton.jqxButton('disabled')) {
+                        if (!me.rtl) {
+                            me.gotoprevpage();
+                        }
+                        else {
+                            me.gotonextpage();
+                        }
+                        setTimeout(function () {
+                            me.pagerleftbutton.focus();
+                        },25);
                     }
                 });
 

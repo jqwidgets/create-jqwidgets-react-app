@@ -228,8 +228,9 @@
                     }
                     if (key === 9)
                     {
-                            var datafield = this.editcell.datafield;
+                        var datafield = this.editcell.datafield;
                         var columnindex = this._getcolumnindex(datafield);
+
                         if (this._currentEditableColumn)
                         {
                             columnindex = this._currentEditableColumn;
@@ -251,6 +252,7 @@
                             {
                                 this._currentEditableColumn = columnindex;
                                 var editor = this.editcell[column.datafield].editor;
+                            
                                 if (editor)
                                 {
                                     if (editor.data().jqxWidget && editor.data().jqxWidget.focus)
@@ -260,10 +262,29 @@
                                     else
                                     {
                                         editor.focus();
+                                        editor[0].onkeyup = function () {
+                                            if (self.gridcontent[0].scrollTop != 0) {
+                                                self.scrolltop(Math.abs(self.gridcontent[0].scrollTop));
+                                                self.gridcontent[0].scrollTop = 0;
+                                            }
+
+                                            if (self.gridcontent[0].scrollLeft != 0) {
+                                                self.gridcontent[0].scrollLeft = 0;
+                                            }
+                                        }
                                     }
                                 }
                                 this._focusedColumn = column.datafield;
                                 this._currentColumn = column.datafield;
+
+                                if (this.gridcontent[0].scrollTop != 0) {
+                                    this.scrolltop(Math.abs(this.gridcontent[0].scrollTop));
+                                    this.gridcontent[0].scrollTop = 0;
+                                }
+
+                                if (this.gridcontent[0].scrollLeft != 0) {
+                                    this.gridcontent[0].scrollLeft = 0;
+                                }
                             }
                             else if (column.columntype == "checkbox")
                             {
@@ -342,6 +363,7 @@
                     var columnindex = self._getcolumnindex(datafield);
                     var canedit = false;
                     var visibleindex = self.getrowvisibleindex(rowindex);
+                    var initialrowindex = rowindex;
                     this.editchar = "";
                     var validated = this.editcell.validated;
                     if (!this.editcell.validated) {
@@ -366,8 +388,25 @@
                                 var lastColumn = self._getlastvisiblecolumn();
                                 canedit = true;
                                 datafield = lastColumn.displayfield;
-                                rowindex--;
-                                if (self.selectionmode.indexOf('cell') != -1) {
+                                var datarecord = self.getdisplayrows()[visibleindex - 1];
+                                if (datarecord) {
+                                    rowindex = datarecord.dataindex;
+                                    if (rowindex === undefined) {
+                                        rowindex = datarecord.boundindex;
+                                    }
+                                    visibleindex = self.getrowvisibleindex(rowindex);
+                                }
+
+                                var canensure = true;
+
+                                if (self.pageable) {
+                                    var pagenumber = Math.floor(visibleindex / this.pagesize);
+                                    if (this.dataview.pagenum != pagenumber) {
+                                        canensure = false;
+                                    }
+                                }
+
+                                if (canensure && self.selectionmode.indexOf('cell') != -1) {
                                     self.clearselection();
                                     self.selectcell(rowindex, datafield);
                                     self._oldselectedcell = self.selectedcell;
@@ -394,19 +433,57 @@
                                 var firstColumn = self._getfirstvisiblecolumn();
                                 canedit = true;
                                 datafield = firstColumn.displayfield;
-                                rowindex++;
+                                var datarecord = self.getdisplayrows()[visibleindex + 1];
+                                if (datarecord) {
+                                    rowindex = datarecord.dataindex;
+                                    if (rowindex === undefined) {
+                                        rowindex = datarecord.boundindex;
+                                    }
+                                    visibleindex = self.getrowvisibleindex(rowindex);
+                                }
+
+                                var canensure = true;
+
+                                if (self.pageable) {
+                                    var pagenumber = Math.floor(visibleindex / this.pagesize);
+                                    if (this.dataview.pagenum != pagenumber) {
+                                        canensure = false;
+                                    }
+                                }
+
                                 if (self.selectionmode.indexOf('cell') != -1) {
-                                    self.clearselection();
-                                    self.selectcell(rowindex, datafield);
-                                    self._oldselectedcell = self.selectedcell;
-                                    setTimeout(function () {
-                                        self.ensurecellvisible(visibleindex, datafield);
-                                    }, 10);
+                                    if (canensure) {
+                                        self.clearselection();
+                                        self.selectcell(rowindex, datafield);
+                                        self._oldselectedcell = self.selectedcell;
+                                        setTimeout(function () {
+                                            self.ensurecellvisible(visibleindex, datafield);
+                                        }, 10);
+                                    }
                                 }
                             }
                         }
 
                         if (canedit) {
+                            if (self.pageable) {
+                                var pagenumber = Math.floor(visibleindex / this.pagesize);
+                                if (this.dataview.pagenum != pagenumber) {
+                                    this._renderrows(this.virtualsizeinfo);
+                                    if (self.selectionmode.indexOf('cell') != -1) {
+                                        self.clearselection();
+                                        self.selectcell(initialrowindex, initialdatafield);
+                                        self._oldselectedcell = self.selectedcell;
+
+                                    }
+                                    if (pagenumber > this.dataview.pagenum) {
+                                        setTimeout(function () {
+                                            self.pagerpageinput.focus();
+                                        }, 25);
+                                    }
+                                    return;
+                                }
+          
+                            }
                             self.begincelledit(rowindex, datafield);
                             if (this.editcell != null && this.editcell.columntype == 'checkbox') {
                                 this._renderrows(this.virtualsizeinfo);
@@ -758,7 +835,7 @@
                             {
                                 if (!this.autorowheight)
                                 {
-                                    this.ensurecellvisible(visibleindex, column.datafield);
+                                    var result = this.ensurecellvisible(visibleindex, column.datafield);
                                 }
                             }
                             if (render !== false) {
@@ -995,6 +1072,11 @@
         beginrowedit: function (row) {
             var me = this;
             var lastIndex = -1;
+
+            if (row == undefined) {
+                return;
+            }
+
             me._oldselectedrow = row;
             this._cellscache = new Array();
             var programmaticMode = false;
@@ -1007,6 +1089,10 @@
                 this.editmode = "selectedrow";
             }
             var firstEditableColumn = null;
+            if (this._currentEditableColumn) {
+                firstEditableColumn = this.getcolumnat(this._currentEditableColumn).datafield;
+            }
+           
             $.each(this.columns.records, function (index, value) {
                 if (me.editable && this.editable)
                 {
@@ -1575,7 +1661,7 @@
                             else {
                                 var dataSource =
                                 {
-                                    localdata: this.source.records,
+                                    localdata: JSON.parse(JSON.stringify(this.source.records)),
                                     datatype: this.source.datatype,
                                     async: false
                                 }
@@ -1676,7 +1762,7 @@
                             else {
                                 var dataSource =
                                 {
-                                    localdata: this.source.records,
+                                    localdata: JSON.parse(JSON.stringify(this.source.records)),
                                     datatype: this.source.datatype,
                                     async: false
                                 }

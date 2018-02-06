@@ -94,8 +94,8 @@
                 selectedcells: new Array(),
                 autobind: true,
                 selectedcell: null,
-                tableZIndex: 799,
-                headerZIndex: 299,
+                tableZIndex: 79,
+                headerZIndex: 29,
                 updatefilterconditions: null,
                 showgroupaggregates: false,
                 showaggregates: false,
@@ -218,6 +218,7 @@
                 // horizontal large step.
                 horizontalscrollbarlargestep: 50,
                 keyboardnavigation: true,
+                keyboardmenunavigation: true,
                 touchModeStyle: 'auto',
                 autoshowloadelement: true,
                 showdefaultloadelement: true,
@@ -378,7 +379,7 @@
             that.hScrollInstance = $.data(that.hScrollBar[0], 'jqxScrollBar').instance;
             that.gridtable = null;
 
-            that.isNestedGrid = that.host.parent() ? that.host.parent().css('z-index') == 9999 : false;
+            that.isNestedGrid = that.host.parent() ? that.host.parent().css('z-index') == 299 : false;
             that.touchdevice = that.isTouchDevice();
 
             if (that.localizestrings) {
@@ -423,7 +424,7 @@
 
             that._builddataloadelement();
             that._cachedcolumns = that.columns;
-            if (that.columns && that.columns.length > 299) {
+            if (that.columns && that.columns.length > that.headerZIndex) {
                 that.headerZIndex = that.columns.length + 100;
             }
             if (that.rowsheight != 28) {
@@ -557,7 +558,7 @@
 
             this.dataloadelement = $('<div style="overflow: hidden; position: absolute;"></div>');
             if (this.showdefaultloadelement) {
-                var table = $('<div style="z-index: 99999; margin-left: -66px; left: 50%; top: 50%; margin-top: -24px; position: relative; width: 100px; height: 33px; padding: 5px; font-family: verdana; font-size: 12px; color: #767676; border-color: #898989; border-width: 1px; border-style: solid; background: #f6f6f6; border-collapse: collapse;"><div style="float: left;"><div style="float: left; overflow: hidden; width: 32px; height: 32px;" class="jqx-grid-load"/><span style="margin-top: 10px; float: left; display: block; margin-left: 5px;" >' + this.gridlocalization.loadtext + '</span></div></div>');
+                var table = $('<div style="z-index: 99; margin-left: -66px; left: 50%; top: 50%; margin-top: -24px; position: relative; width: 100px; height: 33px; padding: 5px; font-family: verdana; font-size: 12px; color: #767676; border-color: #898989; border-width: 1px; border-style: solid; background: #f6f6f6; border-collapse: collapse;"><div style="float: left;"><div style="float: left; overflow: hidden; width: 32px; height: 32px;" class="jqx-grid-load"/><span style="margin-top: 10px; float: left; display: block; margin-left: 5px;" >' + this.gridlocalization.loadtext + '</span></div></div>');
                 table.addClass(this.toTP('jqx-rc-all'));
                 this.dataloadelement.addClass(this.toTP('jqx-rc-all'));
                 table.addClass(this.toTP('jqx-fill-state-normal'));
@@ -1413,7 +1414,8 @@
                 {
                     touchClass = "jqx-grid-menu-item-touch";
                 }
-                this.gridmenu = $('<div id="gridmenu' + this.element.id + '" style="z-index: 9999999999999;"></div>');
+
+                this.gridmenu = $('<div tabindex=0 id="gridmenu' + this.element.id + '" style="z-index: 99;"></div>');
                 this.host.append(this.gridmenu);
                 var menuitems = $('<ul></ul>');
                 var imgsortasc = '<div class="jqx-grid-sortasc-icon"></div>';
@@ -1515,12 +1517,12 @@
                 this.gridmenu.append(menuitems);
 
                 if ($.jqx.browser.msie && $.jqx.browser.version < 8 && this.filterable) {
-                    $("#listBoxfilter1" + this.element.id).css('z-index', 4990);
-                    $("#listBoxfilter2" + this.element.id).css('z-index', 4990);
-                    $("#listBoxfilter3" + this.element.id).css('z-index', 4990);
-                    $('#gridmenu' + this.element.id).css('z-index', 5000);
+                    $("#listBoxfilter1" + this.element.id).css('z-index', 49);
+                    $("#listBoxfilter2" + this.element.id).css('z-index', 49);
+                    $("#listBoxfilter3" + this.element.id).css('z-index', 49);
+                    $('#gridmenu' + this.element.id).css('z-index', 50);
                     this.addHandler($('#gridmenu' + this.element.id), 'initialized', function () {
-                        $('#menuWrappergridmenu' + self.element.id).css('z-index', 4980);
+                        $('#menuWrappergridmenu' + self.element.id).css('z-index', 49);
                     });
                 }
 
@@ -1540,21 +1542,173 @@
 
                 this.removeHandler(this.gridmenu, 'keydown');
                 this.addHandler(this.gridmenu, 'keydown', function (event) {
+                    var items = $(self.gridmenu.find('.jqx-item')).toArray();
+
+                    var resetFocus = function () {
+                        $(items).removeClass('jqx-fill-state-focus');
+                    }
+
+                    var prevItem = function (item) {
+                        var index = items.indexOf(item);
+                        
+                        for (var i = index - 1; i >= 0; i--) {
+                            if (items[i].className.indexOf('disabled') >= 0) {
+                                continue;
+                            }
+
+                            return items[i];
+                        }
+
+                        return item;
+                    }
+
+                    var nextItem = function (item) {
+                        var index = items.indexOf(item);
+
+                        for (var i = index + 1; i < items.length; i++) {
+                            if (items[i].className.indexOf('disabled') >= 0) {
+                                continue;
+                            }
+
+                            return items[i];
+                        }
+
+                        return item;
+                    }
+
+                    var lastItem = function () {
+                        var item = items[items.length - 1];
+
+                        if (item.className.indexOf('disabled') >= 0) {
+                            return prevItem(item);
+                        }
+
+                        return item;
+                    }
+
+                    var firstItem = function () {
+                        var item = items[0];
+
+                        if (item.className.indexOf('disabled') >= 0) {
+                            return nextItem(item);
+                        }
+
+                        return item;
+                    }
+
+                    var activeItem = function () {
+                        for (var i = 0; i < items.length; i++) {
+                            if (items[i].active) {
+                                return items[i];
+                            }
+                        }
+
+                        return null;
+                    }
+
+                    var setActiveItem = function (item) {
+                        resetFocus();
+
+                        for (var i = 0; i < items.length; i++) {
+                            items[i].active = false;
+                        }
+                        if (item) {
+                            $(item).addClass('jqx-fill-state-focus');
+                            item.active = true;
+                        }
+                    }
+
+                    if (!activeItem() && !self.filterable) {
+                        items[0].active = true;
+                    }
+
+                    if (self.keyboardmenunavigation && self.keyboardnavigation) {
+                        if (event.keyCode === 40) {
+                            var activeItem = activeItem();
+                            setActiveItem(nextItem(activeItem));
+                        }
+                        else if (event.keyCode === 38) {
+                            var activeItem = activeItem();
+                            setActiveItem(prevItem(activeItem));
+                        }
+
+                        if (event.keyCode === 9) {
+                            if (!activeItem()) {
+                                if (event.shiftKey) {
+                                    if (document.activeElement === $.find('#filter1' + self.element.id)[0]) {
+                                        var item = lastItem();
+
+                                        setActiveItem(item);
+                                        $($.find('#filter1' + self.element.id)).removeClass('jqx-fill-state-focus');
+                                        self.gridmenu.focus();
+                                        event.stopPropagation();
+                                        event.preventDefault();
+                                    }
+                                    else if (document.activeElement === $.find('#filter1' + self.element.id + 'ex')[0]) {
+                                        var item = lastItem();
+
+                                        setActiveItem(item);
+                                        $($.find('#filter1' + self.element.id) + 'ex').removeClass('jqx-fill-state-focus');
+                                        self.gridmenu.focus();
+                                        event.stopPropagation();
+                                        event.preventDefault();
+                                    }
+                                }
+
+                                return true;
+                            }
+
+                            if (!event.shiftKey) {
+                                var activeItem = activeItem();
+
+                                if (activeItem === lastItem() && self.filterable && !self.showfilterrow) {
+                                    setActiveItem(null);
+                                    if ($($.find('#filter1' + self.element.id)).length > 0) {
+                                        $($.find('#filter1' + self.element.id)).jqxDropDownList('focus');
+                                    } else if ($($.find('#filter1' + self.element.id + 'ex')).length > 0) {
+                                        $($.find('#filter1' + self.element.id + 'ex')).jqxListBox('focus');
+                                    }
+                                }
+                                else {
+                                    setActiveItem(nextItem(activeItem));
+                                }
+
+                                event.stopPropagation();
+                                event.preventDefault();
+                            }
+                            else {
+                                var activeItem = activeItem();
+                                setActiveItem(prevItem(activeItem));
+
+                                event.stopPropagation();
+                                event.preventDefault();
+                            }
+                        }
+                    }
+
                     if (event.keyCode == 27) {
                         self.gridmenu.jqxMenu('close');
                     }
-                    else if (event.keyCode == 13 && self.filterable) {
-                        if (self._buildfilter) {
+                    else if (event.keyCode == 13) {
+                        var items = self.gridmenu.find('.jqx-item');
+                        var activeItem = activeItem();
+
+                        if (activeItem) {
+                            $(activeItem).trigger('click');
+                            setActiveItem(null);
+                        }
+                        else if (self._buildfilter && self.filterable && !self.showfilterrow) {
                             var filter1 = $($.find('#filter1' + self.element.id)).jqxDropDownList('container').css('display') == 'block';
                             var filter2 = $($.find('#filter2' + self.element.id)).jqxDropDownList('container').css('display') == 'block';
                             var filter3 = $($.find('#filter3' + self.element.id)).jqxDropDownList('container').css('display') == 'block';
                             var clearButton = $($.find('#filterclearbutton' + self.element.id)).hasClass('jqx-fill-state-focus');
+                            var okbutton = $($.find('#filterbutton' + self.element.id)).hasClass('jqx-fill-state-focus');
                             if (clearButton) {
                                 var column = $.data(document.body, "contextmenu" + self.element.id).column;
                                 self._clearfilter(self, self.element, column);
                                 self.gridmenu.jqxMenu('close');
                             }
-                            else {
+                            else if (okbutton) {
                                 if (!filter1 && !filter2 && !filter3) {
                                     var column = $.data(document.body, "contextmenu" + self.element.id).column;
                                     self.gridmenu.jqxMenu('close');
@@ -1562,14 +1716,25 @@
                                 }
                             }
                         }
-                    }
+
+                        self.clearselection();
+                        var row = self.getdisplayrows()[0];
+                        var rowindex = self.getboundindex(row);
+
+                        if (self.selectionmode.indexOf('cell') >= 0) {
+                            self.selectcell(rowindex, self.columns.records[0].displayfield);
+                        }
+                        else {
+                            self.selectrow(rowindex);
+                        }
+                    }                   
                 });
                 if (this.popupwidth != 'auto') {
                     stringwidth = this.popupwidth;
                 }
 
                 
-                this.gridmenu.jqxMenu({ popupZIndex: 999999, width: stringwidth, height: itemsheight, autoCloseOnClick: closeonclick, autoOpenPopup: false, mode: 'popup', theme: this.theme, animationShowDuration: 0, animationHideDuration: 0, animationShowDelay: 0 });
+                this.gridmenu.jqxMenu({ popupZIndex: 1000, width: stringwidth, height: itemsheight, autoCloseOnClick: closeonclick, autoOpenPopup: false, mode: 'popup', theme: this.theme, animationShowDuration: 0, animationHideDuration: 0, animationShowDelay: 0 });
                 if (this.filterable) {
                     this.gridmenu.jqxMenu('_setItemProperty', filteritem[0].id, 'closeOnClick', false);
                 }
@@ -2029,6 +2194,7 @@
                         }
                     }
                 }
+                this.focus();
             }
         },
 
@@ -2618,6 +2784,7 @@
         },
 
         ensurerowvisible: function (index) {
+            var that = this;
             if (this.autoheight && !this.pageable) {
                 return true;
             }
@@ -2638,7 +2805,16 @@
                     if (this.groupable && this.groups.length > 0) {
                         return true;
                     }
-                    this.gotopage(pagenumber);
+                    if (!this.editcell) {
+                        this.gotopage(pagenumber);
+                    }
+                    else {
+                        setTimeout(function () {
+                            that.pagerpageinput.focus();
+                        }, 25);
+                        return false;
+                    }
+
                     result = true;
                 }
             }
@@ -3586,7 +3762,7 @@
 
             newRowElement.append(tablerow);
         
-            var rowpopup = $("<div style='border-width: 1px; border-style: solid; padding: 5px; z-index: 99999; display: none; position: absolute;'><div>").appendTo($(document.body));
+            var rowpopup = $("<div style='border-width: 1px; border-style: solid; padding: 5px; z-index: 99; display: none; position: absolute;'><div>").appendTo($(document.body));
             var button = $("<button style='position: relative; float: left; margin: 2px; border-radius: 0px; padding: 4px 8px;'>" + that.gridlocalization.addrowstring + "</button>");
             var updateButton = $("<button style='position: relative; float: left; margin: 2px; border-radius: 0px; padding: 4px 8px;'>" + that.gridlocalization.udpaterowstring + "</button>");
             var deleteButton = $("<button style='position: relative; float: left; margin: 2px; border-radius: 0px; padding: 4px 8px;'>" + that.gridlocalization.deleterowstring + "</button>");
@@ -4450,6 +4626,9 @@
                         this.clearfilters(false);
                     }
                 }
+                if (this.showeverpresentrow) {
+                    this._removeaddnewrow();
+                }
                 this.detailsVisibility = new Array();
                 this.groupsVisibility = new Array();
 
@@ -4862,7 +5041,7 @@
                 this._initgroupsheader();
             }
 
-            this.selectionarea = this.selectionarea || $("<div style='z-index: 99999; visibility: hidden; position: absolute;'></div>");
+            this.selectionarea = this.selectionarea || $("<div style='z-index: 99; visibility: hidden; position: absolute;'></div>");
             this.selectionarea.addClass(this.toThemeProperty('jqx-grid-selectionarea'));
             this.selectionarea.addClass(this.toThemeProperty('jqx-fill-state-pressed'));
             this.content.append(this.selectionarea);
@@ -4930,7 +5109,7 @@
                 }
                 this._overlayElement = $("<div class='jqxgrid-overlay' style='visibility: hidden; position: absolute; width: 100%; height: 100%;'></div>");
                 this._overlayElement.css('background', 'white');
-                this._overlayElement.css('z-index', 18000);
+                this._overlayElement.css('z-index', 180);
                 this._overlayElement.css('opacity', 0.001);
                 if (this.isTouchDevice()) {
                     if (this.vScrollBar.css('visibility') !== "hidden" || this.hScrollBar.css('visibility') !== "hidden") {
@@ -4969,11 +5148,11 @@
 
             this._scrollelementoverlay = $("<div style='visibility: hidden; position: absolute; width: 100%; height: 100%;'></div>");
             this._scrollelementoverlay.css('background', 'black');
-            this._scrollelementoverlay.css('z-index', 18000);
+            this._scrollelementoverlay.css('z-index', 18);
             this._scrollelementoverlay.css('opacity', 0.1);
 
             this._scrollelement = $("<span style='visibility: hidden; top: 50%; right: 10px; position: absolute;'></span>");
-            this._scrollelement.css('z-index', 18005);
+            this._scrollelement.css('z-index', 19);
             this._scrollelement.addClass(this.toThemeProperty('jqx-button'));
             this._scrollelement.addClass(this.toThemeProperty('jqx-fill-state-normal'));
             this._scrollelement.addClass(this.toThemeProperty('jqx-rc-all'));
@@ -5247,14 +5426,23 @@
                 else {
                     var width = Math.floor(totalwidth * (this.text.length / allcharacters.length));
                     autoWidth += width;
-                    if (totalwidth - autoWidth < 3 && totalwidth != autoWidth) {
-                        width += 2;
+                    if (totalwidth - autoWidth < 3 && totalwidth != autoWidth && totalwidth - autoWidth > 0.01) {
+                        if (totalwidth - autoWidth === 1) {
+                            width++;
+                        }
+                        else {
+                            width += 2;
+                        }
                     }
-                    else if (i == me.columns.records.length - 1) {
+                    else if (i == self.columns.records.length - 1) {
                         if (autoWidth < totalwidth) {
                             width += (totalwidth - autoWidth);
                         }
                     }
+                    if (isNaN(width)) {
+                        width = this.minwidth;
+                    }
+
                     if (isNaN(width)) {
                         width = this.minwidth;
                     }
@@ -5553,7 +5741,7 @@
                 else if (!this.hidden) {
                     var width = Math.floor(totalwidth * (this.text.length / allcharacters.length));
                     autoWidth += width;
-                    if (totalwidth - autoWidth < 3 && totalwidth != autoWidth) {
+                    if (totalwidth - autoWidth < 3 && totalwidth != autoWidth && totalwidth - autoWidth > 0.01) {
                         if (totalwidth - autoWidth === 1) {
                             width++;
                         }
@@ -6248,6 +6436,29 @@
                 }
                 if (self.gridmenu.width() < 100) {
                     self._arrangemenu();
+                }
+
+                if (!self.filterable || (self.filterable && self.showfilterrow)) {
+                    setTimeout(function () {
+                        self.gridmenu.focus();
+                        var items = self.gridmenu.find('.jqx-item');
+                        for (var i = 0; i < items.length; i++) {
+                            if (items[i].active) {
+                                items[i].active = false;
+                            }
+                        }
+
+                        var item = items[0];
+
+                        if (items[0].className.indexOf('disabled') >= 0) {
+                            item = items[1];
+                        }
+
+                        $(items).removeClass('jqx-fill-state-focus');
+                        $(item).addClass('jqx-fill-state-focus');
+                        item.active = true;
+
+                    }, 225);
                 }
                 self._hasOpenedMenu = true;
 
@@ -7268,6 +7479,9 @@
                 for (var renderindex = 0; renderindex < pagesize && renderedrows < pagesize; renderindex++) {
                     var renderrow = rowstorender != undefined ? rowstorender[startindex + renderindex] : null;
 
+                    if (this.virtualmode && renderindex >= this.source.totalrecords) {
+                        renderrow = null;
+                    }
                     if (renderrow == null) {
                         startindex = -renderindex;
                         if (this._pagescache[this.dataview.pagenum + 1]) {
@@ -8684,9 +8898,9 @@
                 $(element).height(tablecell.height());
 
                 var tablecelloffset = tablecell.coord();
-                $(element).css('z-index', 9999);
+                $(element).css('z-index', 299);
                 if (this.isTouchDevice()) {
-                    $(element).css('z-index', 99999);
+                    $(element).css('z-index', 999);
                 }
                 $(element).addClass(this.toThemeProperty('jqx-widget-content'));
                 var tablecelloffset = tablecell.coord();
@@ -9512,6 +9726,10 @@
                 this.render();
             }
             else {
+                if (reason === "updaterow") {
+                    this.dataview.refresh();
+                    this._render(true, true, false, false, false);
+                }
                 this._cellscache = new Array();
                 this._pagescache = new Array();
                 this._renderrows(this.virtualsizeinfo);
@@ -9811,11 +10029,8 @@
                     }
 
                     if (me._updating == undefined || me._updating == false) {
-                        setTimeout(function ()
-                        {
-                            me._render(true, true, false, false);
-                            me.invalidate();
-                        });
+                        me._render(true, true, false, false);
+                        me.invalidate();
                     }
 
                     if (me.source && me.source._knockoutdatasource && !me._updateFromAdapter && me.autokoupdates) {
@@ -10147,6 +10362,8 @@
                 var isTouch = me.isTouchDevice();
                 var tableHTML = "";
                 me._hiddencolumns = false;
+
+                var tabindex = 5 + me.columns.records.length;
                 for (var i = 0; i < pagesize; i++) {
                     var tablerow = '<div role="row" style="position: relative; height:' + me.rowsheight + 'px;" id="row' + i + me.element.id + '">';
                     if (isIE7) {
@@ -10176,6 +10393,10 @@
                             me._hiddencolumns = true;
                             zindex++;
                         }
+                        if (i === 0 && j === 0) {
+                            tablecolumn += '" tabindex="' + tabindex + '"';
+                        }
+
                         tablecolumn += '" class="' + cellclass + '">';
                         var cellValue = this._defaultcellsrenderer("", columnrecord);
                         tablecolumn += cellValue;
@@ -10335,7 +10556,7 @@
                     height += me.everpresentrowheight;
                 }
                 if (me.hScrollBar[0].style.visibility == 'visible') {
-                    height += 20;
+                    height += 15;
                 }
 
                 return height;
@@ -10737,6 +10958,18 @@
             if (height != parseInt(me.dataloadelement[0].style.height)) {
                 me.dataloadelement[0].style.height = me.element.style.height;
             }
+
+            if (this.pagergotoinput) {
+                if (this.pagergotoinput.offset().top !== this.pagergoto.offset().top) {
+                    this.pagergotoinput.css('visibility', 'hidden');
+                    this.pagergoto.css('visibility', 'hidden');
+                }
+                else {
+                    this.pagergotoinput.css('visibility', 'inherit');
+                    this.pagergoto.css('visibility', 'inherit');
+                }
+            }
+
             me._hostwidth = width;
         },
 
@@ -11809,7 +12042,7 @@
                     }
 
                     if (self.editable && self.editcell) {
-                        if (key == 13 || key == 27 || key == 9) {
+                        if (key == 13 || key == 27 || key == 9 || key == 32) {
                             if (self._handleeditkeydown) {
                                 result = self._handleeditkeydown(event, self);
                             }
@@ -11849,6 +12082,32 @@
 
                     return true;
                 });
+                
+                self.addHandler(self.host, 'keyup.edit' + self.element.id, function (event) {
+                    if (event.keyCode === 9) {
+                        if (!$(document.activeElement).ischildof(self.filterrow)) {
+                            if (!$(document.activeElement).ischildof(self.pager)) {
+                                switch (self.selectionmode) {
+                                    case 'singlecell':
+                                    case 'multiplecells':
+                                    case 'multiplecellsextended':
+                                    case 'multiplecellsadvanced':
+                                        var selectedcell = self.getselectedcell();
+                                        if (selectedcell === null) {
+                                            self.selectcell(0, self.columns.records[0].displayfield);
+                                        }
+                                        break;
+                                    default:
+                                        var selectedrow = self.getselectedrowindex();
+                                        if (selectedrow === -1) {
+                                            self.selectrow(0);
+                                        }
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                });
 
                 self.addHandler(self.host, 'keydown.edit' + self.element.id, function (event) {
                     var result = true;
@@ -11867,6 +12126,24 @@
                             }
                         }
                     }
+
+                    if (!self.editcell && event.altKey) {
+                        if (!$(document.activeElement).ischildof(self.filterrow)) {
+                            if (!$(document.activeElement).ischildof(self.pager)) {
+
+                                if (event.keyCode === 40) {
+                                    var selectedcell = self.getselectedcell();
+                                    if (selectedcell) {
+                                        self.openmenu(selectedcell.column);                             
+                                    }
+                                }
+                                else if (event.keyCode === 38) {
+                                    self._closemenu();
+                                }
+                            }
+                        }
+                    }
+
                     if (!($.jqx.browser.msie && $.jqx.browser.version < 8)) {
                         if (result && self.keyboardnavigation && self._handlekeydown) {
                             result = self._handlekeydown(event, self);
@@ -11890,6 +12167,17 @@
                             event.stopPropagation();
                         }
                     }
+
+                    if (result && self.selectedcells && self.selectedcells.length > 0) {
+                        if (event.keyCode === 9 && event.shiftKey && self.table && self.table[0].rows && self.table[0].rows.length > 0) {
+                            if (!$(document.activeElement).ischildof(self.filterrow)) {
+                                if (!$(document.activeElement).ischildof(self.pager)) {
+                                    self.table[0].rows[0].cells[0].focus();
+                                }
+                            }
+                        }
+                    }
+
                     return result;
                 });
             }
@@ -12028,6 +12316,10 @@
             }
 
             if ($(event.target).ischildof(this.columnsheader) || $(event.target).ischildof(this.hScrollBar) || $(event.target).ischildof(this.vScrollBar)) {
+                return true;
+            }
+
+            if (event.target === self.bottomRight[0]) {
                 return true;
             }
 
@@ -12195,6 +12487,8 @@
                 var column = this._getcolumnat(cellindex);
                 var cellvalue = this.getcellvalue(this.getboundindex(row), column.datafield);
                 if (this.editable && this.editcell) {
+                    this._currentEditableColumn = cellindex;
+
                     if (column.datafield == this.editcell.column) {
                         if (this.getboundindex(row) == this.editcell.row) {
                             this.mousecaptured = false;
@@ -12339,6 +12633,7 @@
                             if (self.editmode == "selectedrow") {
                                 if (caneditrow && !self.editcell) {
                                     if (column.columntype !== "checkbox") {
+                                        this._currentEditableColumn = cellindex;
                                         var result = self.beginrowedit(this.getboundindex(row));
                                     }
                                 }

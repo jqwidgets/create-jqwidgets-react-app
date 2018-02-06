@@ -102,7 +102,7 @@
                 touchMode: 'auto',
                 // Sets menu's source.
                 source: null,
-                popupZIndex: 17000,
+                popupZIndex: 1000,
                 rtl: false,
                 keyboardNavigation: false,
                 lockFocus: false,
@@ -575,7 +575,7 @@
                 if (item.isOpen == true && item.element == element) {
                     me._closeItem(me, item);
                     if (item.parentId) {
-                        me.closeItem(item.parentId);
+                //        me.closeItem(item.parentId);
                     }
                 }
             });
@@ -1576,7 +1576,7 @@
                     $.data(me.element, 'contextMenuOpened' + me.element.id, true);
                     me._raiseEvent('0', me);
                     me._raiseEvent('4', { left: left, top: top });
-                    me.host.css('z-index', 9999);
+                    me.host.css('z-index', me.popupZIndex);
 
                     if (left != undefined && top != undefined) {
                         me.host.css({ 'left': left, 'top': top });
@@ -1893,7 +1893,7 @@
                     }
                 }
             });
-            this.removeHandler(this.host, 'keydown');
+            this.removeHandler(this.host, 'keydown.menu' + this.element.id);
             me.handleKeyDown = function (event) {
                 if (me.keyboardNavigation) {
                     if (event.target.nodeName.toLowerCase() === "input") {
@@ -1919,12 +1919,15 @@
                     });
 
 
-                    if (!activeItem && selectedItem)
+                    if (!activeItem && selectedItem) {
                         activeItem = selectedItem;
+                        return false;
+                    }
                     if (!activeItem) {
                         $(me.items[0].element).addClass(me.toThemeProperty('jqx-fill-state-focus'));
                         me.activeItem = me.items[0];
                         activeItem = me.activeItem;
+                        return false;
                     }
 
                     var handled = false;
@@ -2218,7 +2221,7 @@
                     return true;
                 }
             }
-            this.addHandler(this.host, 'keydown', function (event) {
+            this.addHandler(this.host, 'keydown.menu' + this.element.id, function (event) {
                 me.handleKeyDown(event);
             });
 

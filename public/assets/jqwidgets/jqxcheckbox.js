@@ -22,9 +22,9 @@
                 // Sets the height.
                 height: null,
                 // Type: String
-                // Default: '13px'
+                // Default: '15px'
                 // Gets or sets the checkbox's size.
-                boxSize: '13px',
+                boxSize: '15px',
                 // Type: Bool and Null
                 // Default: false
                 // Gets or sets the ckeck state.
@@ -587,7 +587,10 @@
                 });
             }
 
+            var changeType = this.changeType;
+
             this._raiseEvent('0', true);
+            this.changeType = changeType;
             this._raiseEvent('3', { checked: true });
             if (this.input != undefined) {
                 this.input.val(this.checked);
@@ -614,7 +617,9 @@
                 });
             }
 
+            var changeType = this.changeType;
             this._raiseEvent('1');
+            this.changeType = changeType;
             this._raiseEvent('3', { checked: false });
             if (this.input != undefined) {
                 this.input.val(this.checked);
@@ -637,6 +642,7 @@
                 });
             }
 
+            var changeType = this.changeType;
             this._raiseEvent('2');
             this._raiseEvent('3', { checked: null });
             if (this.input != undefined) {

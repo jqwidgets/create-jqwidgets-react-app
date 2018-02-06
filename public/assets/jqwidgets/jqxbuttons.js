@@ -614,9 +614,17 @@
                 }
                 return that.element.value;
             }
+
+            if (arguments.length > 0 && that._text) {
+				that._text.innerHTML = arguments[0];
+				that.refresh();
+
+                return;
+            }
+
             that.element.value = arguments[0];
             if (that.element.nodeName.toLowerCase() == "button") {
-                $(that.element).text(arguments[0]);
+                $(that.element).html(arguments[0]);
             }
 
             that.refresh();
@@ -723,8 +731,12 @@
                 }
                 else object._addImage("jqxButton");
             }
-            if (key == "imgSrc" || key == "imgWidth" || key == "imgHeight" || key == "value") {
+            if (key == "imgSrc" || key == "imgWidth" || key == "imgHeight") {
                 object._addImage("jqxButton");
+            }
+
+            if (key === "value") {
+                object.val(value);
             }
 
             if (key == "width" || key == "height")

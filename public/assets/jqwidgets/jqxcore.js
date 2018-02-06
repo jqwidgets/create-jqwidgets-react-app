@@ -8193,10 +8193,16 @@ JQXLite.generateID = function () {
     var S4 = function () {
         return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
     };
-    return "jqx" + S4() + S4() + S4();
+
+    var id = "";
+    do {
+        id = "jqx" + S4() + S4() + S4();
+    } while ($('#' + id).length > 0);
+
+    return id;
 }
 
-var jqxBaseFramework = window.minQuery || window.jQuery;
+var jqxBaseFramework = window.jqxBaseFramework = window.minQuery || window.jQuery;
 
 (function ($) {
 
@@ -8267,6 +8273,17 @@ var jqxBaseFramework = window.minQuery || window.jQuery;
 
         return;
     }
+
+    $.jqx.getByPriority = function (arr) {
+        var value = undefined;
+        for (var i = 0; i < arr.length && value == undefined; i++) {
+            if (value == undefined && arr[i] != undefined)
+                value = arr[i];
+        }
+
+        return value;
+    }
+
     $.jqx.hasProperty = function (obj, property) {
         if (typeof (property) == 'object') {
             for (var prop in property) {
@@ -8637,7 +8654,7 @@ var jqxBaseFramework = window.minQuery || window.jQuery;
         }
 
         throw "jqxCore: Invalid parameter '" + $.jqx.serialize(args) + "' does not exist.";
-        return undefined;
+  //      return undefined;
     }
 
     $.jqx.applyWidget = function (element, controlName, args, instance) {
@@ -9221,7 +9238,7 @@ var jqxBaseFramework = window.minQuery || window.jQuery;
     $.extend($.jqx.utilities,
     {
         scrollBarSize: 13,
-        touchScrollBarSize: 0,
+        touchScrollBarSize: 8,
         scrollBarButtonsVisibility: "visible",
         createId: function () {
             var S4 = function () {
@@ -10370,7 +10387,7 @@ var jqxBaseFramework = window.minQuery || window.jQuery;
                 }
 
                 // mouse event
-                return e.clientY;
+            //    return e.clientY;
             }
 
             function xpos(e)
@@ -10391,7 +10408,7 @@ var jqxBaseFramework = window.minQuery || window.jQuery;
                 }
 
                 // mouse event
-                return e.clientX;
+             //   return e.clientX;
             }
 
             var track = function ()
@@ -10519,7 +10536,7 @@ var jqxBaseFramework = window.minQuery || window.jQuery;
                     } else
                     {
                         scroll(target);
-                        verticalScroll.fadeOut('fast');
+                   //     verticalScroll.fadeOut('fast');
                     }
                 }
             }
@@ -10537,7 +10554,7 @@ var jqxBaseFramework = window.minQuery || window.jQuery;
                     } else
                     {
                         hscroll(xtarget);
-                        horizontalScroll.fadeOut('fast');
+                //        horizontalScroll.fadeOut('fast');
                     }
 
                 }
@@ -10701,7 +10718,7 @@ var jqxBaseFramework = window.minQuery || window.jQuery;
                     target = Math.round(offset + amplitude);
                     timestamp = Date.now();
                     requestAnimationFrame(autoScroll);
-                    verticalScroll.fadeIn(100);
+       //             verticalScroll.fadeIn(100);
                 }
                 else if (xjqxAnimations > 10 || xjqxAnimations < -10)
                 {
@@ -10709,12 +10726,12 @@ var jqxBaseFramework = window.minQuery || window.jQuery;
                     xtarget = Math.round(xoffset + amplitude);
                     timestamp = Date.now();
                     requestAnimationFrame(hAutoScroll);
-                    horizontalScroll.fadeIn(100);
+          //          horizontalScroll.fadeIn(100);
                 }
                 else
                 {
-                    horizontalScroll.fadeOut(100);
-                    verticalScroll.fadeOut(100);
+            //        horizontalScroll.fadeOut(100);
+            //        verticalScroll.fadeOut(100);
                 }
 
                 me.scrolling[key] = false;
