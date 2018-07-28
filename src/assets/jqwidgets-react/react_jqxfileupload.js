@@ -1,8 +1,13 @@
 /*
-jQWidgets v5.4.0 (2017-Oct)
-Copyright (c) 2011-2017 jQWidgets.
+jQWidgets v6.0.4 (2018-July)
+Copyright (c) 2011-2018 jQWidgets.
 License: https://jqwidgets.com/license/
 */
+
+import '../jqwidgets/styles/jqx.base.css';
+import '../jqwidgets/jqxcore.js';
+import '../jqwidgets/jqxbuttons.js';
+import '../jqwidgets/jqxfileupload.js';
 
 import React from 'react';
 
@@ -175,8 +180,8 @@ export default class JqxFileUpload extends React.Component {
     browse() {
         JQXLite(this.componentSelector).jqxFileUpload('browse');  
     };
-    cancelFile() {
-        JQXLite(this.componentSelector).jqxFileUpload('cancelFile');  
+    cancelFile(fileIndex) {
+        JQXLite(this.componentSelector).jqxFileUpload('cancelFile', fileIndex);  
     };
     cancelAll() {
         JQXLite(this.componentSelector).jqxFileUpload('cancelAll');  

@@ -1,8 +1,16 @@
 /*
-jQWidgets v5.4.0 (2017-Oct)
-Copyright (c) 2011-2017 jQWidgets.
+jQWidgets v6.0.4 (2018-July)
+Copyright (c) 2011-2018 jQWidgets.
 License: https://jqwidgets.com/license/
 */
+
+import '../jqwidgets/styles/jqx.base.css';
+import '../jqwidgets/jqxcore.js';
+import '../jqwidgets/jqxbuttons.js';
+import '../jqwidgets/jqxtooltip.js';
+import '../jqwidgets/globalization/globalize.js';
+import '../jqwidgets/jqxdatetimeinput.js';
+import '../jqwidgets/jqxcalendar.js';
 
 import React from 'react';
 
@@ -16,7 +24,7 @@ export default class JqxCalendar extends React.Component {
         this.createComponent(options);
     };
     manageAttributes() {
-        let properties = ['backText','columnHeaderHeight','clearString','culture','dayNameFormat','disabled','enableWeekend','enableViews','enableOtherMonthDays','enableFastNavigation','enableHover','enableAutoNavigation','enableTooltips','forwardText','firstDayOfWeek','height','min','max','navigationDelay','rowHeaderWidth','readOnly','restrictedDates','rtl','stepMonths','showWeeknumbers','showDayNames','showOtherMonthDays','showFooter','selectionMode','specialDates','theme','titleHeight','titleFormat','todayString','value','width'];
+        let properties = ['backText','columnHeaderHeight','clearString','culture','dayNameFormat','disabled','enableWeekend','enableViews','enableOtherMonthDays','enableFastNavigation','enableHover','enableAutoNavigation','enableTooltips','forwardText','firstDayOfWeek','height','min','max','navigationDelay','rowHeaderWidth','readOnly','restrictedDates','rtl','stepMonths','showWeekNumbers','showDayNames','showOtherMonthDays','showFooter','selectionMode','specialDates','theme','titleHeight','titleFormat','todayString','value','width'];
         let options = {};
         for(let item in this.props) {
               if(item === 'settings') {
@@ -235,11 +243,11 @@ export default class JqxCalendar extends React.Component {
             return JQXLite(this.componentSelector).jqxCalendar('stepMonths');
         }
     };
-    showWeeknumbers(arg) {
+    showWeekNumbers(arg) {
         if (arg !== undefined) {
-            JQXLite(this.componentSelector).jqxCalendar('showWeeknumbers', arg)
+            JQXLite(this.componentSelector).jqxCalendar('showWeekNumbers', arg)
         } else {
-            return JQXLite(this.componentSelector).jqxCalendar('showWeeknumbers');
+            return JQXLite(this.componentSelector).jqxCalendar('showWeekNumbers');
         }
     };
     showDayNames(arg) {
