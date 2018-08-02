@@ -65,11 +65,6 @@ By default, it also includes a service worker so that your app loads from local 
 
 Your app is ready to be deployed.
 
-### Adding other jQWidgets
-
-This project will show you the `React jQWidgets Grid`. But of course you will want to use some other widgets too. <br />
-For that you need to add their core files first. This is done in the `public` folder. <br />
-
 ## Why Use This?
 
 **If you’re getting started** with `jQWidgets` and `React`, using `create-jqwidgets-react-app` is the easiest way to do this.  <br />
